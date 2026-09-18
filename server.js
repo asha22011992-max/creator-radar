@@ -1,0 +1,64 @@
+const http = require("http");
+const { URL } = require("url");
+
+const API_KEY = process.env.YOUTUBE_API_KEY;
+
+const server = http.createServer(async (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Content-Type", "application/json");
+
+            const url = new URL(req.url, "http://localhost:3000");
+
+                if (url.pathname === "/api/youtube") {
+                        const creator = url.searchParams.get("creator");
+
+                                if (!creator) {
+                                            res.writeHead(400);
+                                                        res.end(JSON.stringify({
+                                                                        error: "Creator name is required"
+                                                                                    }));
+                                                                                                return;
+                                                                                                        }
+
+                                                                                                                if (!API_KEY) {
+                                                                                                                            res.writeHead(500);
+                                                                                                                                        res.end(JSON.stringify({
+                                                                                                                                                        error: "YouTube API key is not available"
+                                                                                                                                                                    }));
+                                                                                                                                                                                return;
+                                                                                                                                                                                        }
+
+                                                                                                                                                                                                try {
+                                                                                                                                                                                                            const youtubeURL =
+                                                                                                                                                                                                                            "https://www.googleapis.com/youtube/v3/search" +
+                                                                                                                                                                                                                                            "?part=snippet" +
+                                                                                                                                                                                                                                                            "&type=channel" +
+                                                                                                                                                                                                                                                                            "&q=" + encodeURIComponent(creator) +
+                                                                                                                                                                                                                                                                                            "&maxResults=5" +
+                                                                                                                                                                                                                                                                                                            "&key=" + API_KEY;
+
+                                                                                                                                                                                                                                                                                                                        const response = await fetch(youtubeURL);
+                                                                                                                                                                                                                                                                                                                                    const data = await response.json();
+
+                                                                                                                                                                                                                                                                                                                                                res.writeHead(response.ok ? 200 : response.status);
+                                                                                                                                                                                                                                                                                                                                                            res.end(JSON.stringify(data));
+
+                                                                                                                                                                                                                                                                                                                                                                    } catch (error) {
+                                                                                                                                                                                                                                                                                                                                                                                res.writeHead(500);
+                                                                                                                                                                                                                                                                                                                                                                                            res.end(JSON.stringify({
+                                                                                                                                                                                                                                                                                                                                                                                                            error: "Failed to contact YouTube"
+                                                                                                                                                                                                                                                                                                                                                                                                                        }));
+                                                                                                                                                                                                                                                                                                                                                                                                                                }
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                        return;
+                                                                                                                                                                                                                                                                                                                                                                                                                                            }
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                res.writeHead(200);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    res.end(JSON.stringify({
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            message: "Creator Radar backend is running!"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                }));
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                });
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                server.listen(3000, () => {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                    console.log("Creator Radar backend running on port 3000");
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                    });
